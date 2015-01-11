@@ -1,0 +1,95 @@
+<html>
+<head>
+	<title>Sample Leaflet VAF</title>
+
+	<meta charset="UTF-8">
+
+	<link type="text/css" href="inc/leaflet.css" rel="stylesheet"/>
+	<link type="text/css" href="inc/leaflet.markercluster.css" rel="stylesheet"/>
+	<link type="text/css" href="inc/dc.css" rel="stylesheet"/>
+
+  <style>
+    #holder {
+      width:850px;
+      margin:20px auto;
+    }
+    #holder>div {
+      padding:30px 0;
+      clear:both;
+    }
+    .map {
+      width:600px;
+      height:500px;
+    }
+    .pie {
+      margin-left:30px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="holder">
+  <div id="leaf">
+    <div class="map"></div>
+    <div class="pie"></div>
+  </div>
+
+
+</div>
+
+<script type="text/javascript" src="inc/d3.js"></script>
+<script type="text/javascript" src="inc/crossfilter.js"></script>
+<script type="text/javascript" src="inc/dc.js"></script>
+<script type="text/javascript" src="inc/leaflet.js"></script>
+<script type="text/javascript" src="inc/leaflet.markercluster.js"></script>
+<script type="text/javascript" src="inc/dc.leaflet.js"></script>
+<script type="text/javascript">
+
+/*     Markers      */
+
+d3.csv("data/vafdata.csv", function(data) {
+  drawMarkerArea(data);
+});
+
+
+function drawMarkerArea(data) {
+  var xf = crossfilter(data);
+  var groupname = "marker-area";
+	var facilities = xf.dimension(function(d) { return d.geo; });
+	var facilitiesGroup = facilities.group().reduceCount();
+
+
+  dc.leafletMarkerChart("#leaf .map",groupname)
+      .dimension(facilities)
+      .group(facilitiesGroup)
+      .width(600)
+	  .height(400)
+      .center([31.3482,36.519])
+      .zoom(7)
+      .renderPopup(false)
+	  .cluster(true)
+      .filterByArea(true);  
+
+	var types = xf.dimension(function(d) { return d.Thresholds; });
+	var typesGroup = types.group().reduceCount();
+
+  dc.pieChart("#leaf .pie",groupname)
+      .dimension(types)
+      .group(typesGroup)
+      .width(200)
+	    .height(200)
+	    .renderLabel(true)
+	    .renderTitle(true)
+      .ordering(function (p) {
+        return -p.value;
+      });
+
+	dc.renderAll(groupname);
+}
+
+</script>
+
+
+
+</body>
+</html>
